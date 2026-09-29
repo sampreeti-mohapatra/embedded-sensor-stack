@@ -1,0 +1,1 @@
+source "$BR2_EXTERNAL_SENSOR_STACK_PATH/package/sensor-stack/Config.in"

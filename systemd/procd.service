@@ -1,0 +1,10 @@
+[Unit]
+Description=Sensor stack: procd
+
+[Service]
+ExecStart=/usr/bin/procd
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

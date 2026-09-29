@@ -1,0 +1,31 @@
+#!/bin/sh
+# BusyBox init script with a simple supervisor loop (restarts crashed daemons).
+DAEMONS="procd sensord metricsd"
+PIDDIR=/var/run
+
+supervise() {
+    d=$1
+    while true; do
+        /usr/bin/$d
+        logger -t sensor-stack "$d exited, restarting in 1s"
+        sleep 1
+    done
+}
+
+case "$1" in
+  start)
+    for d in $DAEMONS; do
+        supervise $d &
+        echo $! > $PIDDIR/sensor-stack-$d.pid
+    done
+    ;;
+  stop)
+    for d in $DAEMONS; do
+        [ -f $PIDDIR/sensor-stack-$d.pid ] && kill $(cat $PIDDIR/sensor-stack-$d.pid) 2>/dev/null
+        killall $d 2>/dev/null
+        rm -f $PIDDIR/sensor-stack-$d.pid
+    done
+    ;;
+  restart) $0 stop; $0 start ;;
+  *) echo "Usage: $0 {start|stop|restart}"; exit 1 ;;
+esac

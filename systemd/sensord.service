@@ -1,0 +1,12 @@
+[Unit]
+Description=Sensor stack: sensord
+After=procd.service
+Wants=procd.service
+
+[Service]
+ExecStart=/usr/bin/sensord
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

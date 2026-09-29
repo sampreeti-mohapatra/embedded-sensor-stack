@@ -1,0 +1,9 @@
+config BR2_PACKAGE_SENSOR_STACK
+	bool "sensor-stack"
+	depends on BR2_INSTALL_LIBSTDCPP
+	help
+	  Multi-process C++17 sensor stack (sensord, procd, metricsd)
+	  using Unix-socket IPC, with an HTTP metrics endpoint.
+
+comment "sensor-stack needs a toolchain w/ C++"
+	depends on !BR2_INSTALL_LIBSTDCPP
