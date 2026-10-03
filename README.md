@@ -65,3 +65,8 @@ Init: BusyBox init uses `S50sensor-stack` (supervisor loop that restarts crashed
 - Replace `SimulatedSensor` with a real I2C driver (`/dev/i2c-*`)
 - Benchmark Unix sockets vs POSIX message queues vs shared memory
 - JSON config file, A/B OTA update agent, Yocto layer version
+
+
+## Linux device-driver extension (optional)
+
+The `drivers/virtual_sensor/` directory contains a software-only Linux misc character driver exposing `/dev/sensor0`. It demonstrates kernel-module and userspace interaction; it is **not** a physical I2C/SPI driver. Existing simulated sensors remain the default. To use the device as the temperature source, build/load the module on a matching Linux kernel and start `sensord` with `--device /dev/sensor0`. See [`docs/DRIVER_UPGRADE.md`](docs/DRIVER_UPGRADE.md) for build, load, test, limitations, and Buildroot notes.

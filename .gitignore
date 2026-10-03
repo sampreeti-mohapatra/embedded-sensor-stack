@@ -4,3 +4,8 @@ build-*/
 *.zip
 .vscode/
 .idea/
+
+# Local test binaries and scratch files
+sensor_reader
+test.cpp
+write_test.txt

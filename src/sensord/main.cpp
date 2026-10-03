@@ -16,11 +16,14 @@ using namespace stack;
 
 int main(int argc, char** argv) {
     int interval_ms = 500;
+    std::string device_path;
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "--interval-ms") && i + 1 < argc) {
             interval_ms = std::atoi(argv[++i]);
+        } else if (!std::strcmp(argv[i], "--device") && i + 1 < argc) {
+            device_path = argv[++i];
         } else {
-            std::fprintf(stderr, "usage: %s [--interval-ms N]\n", argv[0]);
+            std::fprintf(stderr, "usage: %s [--interval-ms N] [--device /dev/sensor0]\n", argv[0]);
             return 2;
         }
     }
@@ -30,8 +33,13 @@ int main(int argc, char** argv) {
     install_signal_handlers();
 
     std::vector<std::unique_ptr<ISensor>> sensors;
-    sensors.emplace_back(std::make_unique<SimulatedSensor>(
-        SensorType::Temperature, "sim-temp", 28.0, 5.0, 0.4, 1));
+    if (device_path.empty()) {
+        sensors.emplace_back(std::make_unique<SimulatedSensor>(
+            SensorType::Temperature, "sim-temp", 28.0, 5.0, 0.4, 1));
+    } else {
+        sensors.emplace_back(std::make_unique<LinuxDeviceSensor>(
+            SensorType::Temperature, device_path, "linux-char-device-temp"));
+    }
     sensors.emplace_back(std::make_unique<SimulatedSensor>(
         SensorType::Humidity, "sim-hum", 60.0, 15.0, 1.0, 2));
 
@@ -47,7 +55,13 @@ int main(int argc, char** argv) {
 
     while (!g_stop) {
         for (auto& s : sensors) {
-            Reading r{now_ns(), static_cast<std::uint8_t>(s->type()), s->read()};
+            Reading r{};
+            try {
+                r = Reading{now_ns(), static_cast<std::uint8_t>(s->type()), s->read()};
+            } catch (const std::exception& e) {
+                syslog(LOG_ERR, "sensor %s: %s", s->name(), e.what());
+                continue;
+            }
             ssize_t n = sendto(fd, &r, sizeof(r), 0,
                                reinterpret_cast<sockaddr*>(&dst), sizeof(dst));
             if (n < 0 && (++dropped % 20) == 1)
